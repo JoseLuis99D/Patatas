@@ -10,6 +10,15 @@ class NFA:
             return self.transition[input]
         else:
             return []
+    def compute(self, string, states):
+        result = set()
+        if len(string) == 0:
+            return states
+        else:
+            for state in states:
+                for s in self.eclousure(state):
+                    result = result.union(self.next_states(s, string[0]))
+        return self.compute(string[1:], result)
     def eclousure(self, state):
         set_clousure = []
         stack = [state]
@@ -50,11 +59,16 @@ class NFA:
         new_transition[('s' + self.start_state + nfa.start_state, 'epsilon')] = 'q' + nfa.start_state
         return NFA(new_states, new_transition, new_start_state, new_accept_states)
 
-transition = {('0', 'epsilon'): {'1','3'}, ('1', 'a'): {'2'}, ('2', 'b'): {'4'}, ('2', 'epsilon'): {'5'}, ('4', 'epsilon'): {'5'}}
-nfa = NFA({'0', '1', '2', '3', '4', '5'}, transition, '0', {'5'})
-print(nfa.eclousure('0'))
-print(nfa.eclousure('1'))
-print(nfa.eclousure('2'))
+
+#transition = {('0', 'epsilon'): {'1','3'}, ('1', 'a'): {'2'}, ('3', 'b'): {'4'}, ('2', 'epsilon'): {'5'}, ('4', 'epsilon'): {'5'}}
+#nfa = NFA({'0', '1', '2', '3', '4', '5'}, transition, '0', {'5'})
+#print(nfa.eclousure('0'))
+#print(nfa.eclousure('1'))
+#print(nfa.eclousure('2'))
+
+t = {('0', 'a'): {'1'}, ('1', 'b'): {'1'}, ('1', 'a'): {'2'}}
+nfa = NFA({'0', '1', '2'}, t, '0', {'2'})
+print(nfa.compute('abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbba', nfa.eclousure(nfa.start_state)))
 
 # transition1 = {('1', 'a'): '2'}
 # nfa1 = NFA({'1', '2'}, transition1, '1', {'2'})
