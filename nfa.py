@@ -12,8 +12,9 @@ class NFA:
     def accept(self, string):
         result_set = self.compute(string, self.eclousure(self.start_state))
         for result in result_set:
-            if result in self.accept_states:
-                return True
+            for eresult in self.eclousure(result):
+                if eresult in self.accept_states:
+                    return True
         return False
     def next_states(self, state, char='epsilon'):
         input = (state, char)
@@ -68,11 +69,25 @@ class NFA:
         for k, v in nfa.transition.items():
             new_transition[('q' + k[0], k[1])] = {'q' + s for s in v}
         for state in self.accept_states:
-            new_transition[(state, 'epsilon')] = {'f' + self.start_state + nfa.start_state}
+            new_transition[('p' + state, 'epsilon')] = {'f' + self.start_state + nfa.start_state}
+        for state in nfa.accept_states:
+            new_transition[('q' + state, 'epsilon')] = {'f' + self.start_state + nfa.start_state}
         new_transition[('s' + self.start_state + nfa.start_state, 'epsilon')] = {'p' + self.start_state, 'q' + nfa.start_state}
         return NFA(new_states, new_transition, new_start_state, new_accept_states)
 
-    def kleene_clousure(self,):
+    def kleene_clousure(self):
+        new_states = self.states
+        new_states.add('q_i' + self.start_state)
+        new_states.add('q_f' + self.start_state)
+        new_start_state = 'q_i' + self.start_state
+        new_accept_states = {'q_f' + self.start_state}
+        new_transition = self.transition
+        new_transition[('q_i' + self.start_state, 'epsilon')] = {self.start_state, 'q_f' + self.start_state}
+        for state in self.accept_states:
+            new_transition[(state, 'epsilon')] = {'q_f' + self.start_state, self.start_state}
+        return NFA(new_states, new_transition, new_start_state, new_accept_states)
+
+    def plus_clousure(self):
         new_states = self.states
         new_states.add('q_i' + self.start_state)
         new_states.add('q_f' + self.start_state)
@@ -80,33 +95,33 @@ class NFA:
         new_accept_states = {'q_f' + self.start_state}
         new_transition = self.transition
         new_transition[('q_i' + self.start_state, 'epsilon')] = {self.start_state}
-        new_transition[('q_i' + self.start_state, 'epsilon')] = {'q_f' + self.start_state}
-        for state in self.accept_states.items():
-            new_transition[(state, 'epsilon')] = {'q_f' + self.start_state}
-            new_transition[(state, 'epsilon')] = {self.start_state}
+        for state in self.accept_states:
+            new_transition[(state, 'epsilon')] = {'q_f' + self.start_state, self.start_state}
         return NFA(new_states, new_transition, new_start_state, new_accept_states)
 
 
+"""
 transition = {('0', 'epsilon'): {'1','3'}, ('1', 'a'): {'2'}, ('3', 'b'): {'4'}, ('2', 'epsilon'): {'5'}, ('4', 'epsilon'): {'5'}}
 nfa = NFA({'0', '1', '2', '3', '4', '5'}, transition, '0', {'5'})
-#print(nfa.eclousure('0'))
-#print(nfa.eclousure('1'))
-#print(nfa.eclousure('2'))
 
-#t = {('0', 'a'): {'1'}, ('1', 'b'): {'1'}, ('1', 'a'): {'2'}}
-#nfa = NFA({'0', '1', '2'}, t, '0', {'2'})
-#print(nfa.compute('abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbba', nfa.eclousure(nfa.start_state)))
+trans2 = {('0', '0'): {'0'}, ('0', '1'): {'1'}, ('1', '0'): {'2'}, ('2', '0'): {'1'}, ('2', '1'): {'5'}, ('2', 'epsilon'): {'3'}, ('3', '0'): {'4'}, ('4', '0'): {'3'}, ('4', '1'): {'5'}}
+nfa2 = NFA({'0', '1', '2', '3', '4', '5'}, trans2, '0', {'5'})
 
-transition1 = {('1', 'a'): '2'}
-nfa1 = NFA({'1', '2'}, transition1, '1', {'2'})
-transition2 = {('3', 'b'): '4'}
-nfa2 = NFA({'3', '4'}, transition2, '3', {'4'})
+trans3 = {('1', 'a'): {'2'}, ('2', 'epsilon'): {'3'}, ('3', 'epsilon'): {'4'}, ('4', 'b'): {'5'}}
+nfa3 = NFA({'1', '2', '3', '4', '5'}, trans3, '1', {'5'})
 
+trans4 = {('0', 'a'): {'1'}}
+nfa4 = NFA({'0', '1'}, trans4, '0', {'1'})
 
-nfa3 = nfa.concat(nfa1)
-nfa4 = nfa.concat(nfa2)
-print('----------------------------')
-print('NFA3 accept a?: ' + str(nfa4.accept('a')))
-print('NFA3 accept ba?: ' + str(nfa4.accept('ba')))
-print('NFA3 accept aa?: ' + str(nfa4.accept('aa')))
-print('NFA3 accept ab?: ' + str(nfa4.accept('ab')))
+trans6 = {('0', 'b'): {'1'}}
+nfa6 = NFA({'0', '1'}, trans6, '0', {'1'})
+
+nfa7 = nfa4.concat(nfa6)
+nfa7 = nfa7.kleene_clousure()
+
+print(nfa7.accept('ab'))
+print(nfa7.accept('ba'))
+print(nfa7.accept('ababababababababababab'))
+print(nfa7.accept('abababababababababababa'))
+print(nfa7.accept(''))
+"""
