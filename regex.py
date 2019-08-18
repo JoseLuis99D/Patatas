@@ -1,6 +1,43 @@
 from nfa import NFA
 
 
+class RegexUtils:
+    @staticmethod
+    def is_operator(char):
+        if "*|.+()".find(char) != -1:
+            return True
+        return False
+
+    @staticmethod
+    def has_less_or_equal_priority(char, operator):
+        operators = {'*': 3, '+': 3, '.': 2, '|': 1, '(': 0}
+        return operators[char] <= operators[operator]
+
+    @staticmethod
+    def to_postfix(infix):
+        stack = []
+        postfix = ''
+        for c in infix:
+            if c == '(':
+                stack.append(c)
+            elif c == ')':
+                while not stack[-1] == '(':
+                    postfix = postfix + stack[-1]
+                    stack.pop()
+                stack.pop()
+            elif RegexUtils.is_operator(c):
+                while (stack != []) and (stack[-1] != '(') and (RegexUtils.has_less_or_equal_priority(c, stack[-1])):
+                    postfix = postfix + stack[-1]
+                    stack.pop()
+                stack.append(c)
+            else:
+                postfix = postfix + c
+        while stack:
+            postfix = postfix + stack[-1]
+            stack.pop()
+        return list(postfix)
+
+
 def regex_to_nfa(regexp):
     new__regexp = ""
     for index, char in enumerate(regexp):
@@ -56,44 +93,7 @@ def regex_to_nfa(regexp):
     return stack_aux.pop()
 
 
-class RegexUtils:
-    @staticmethod
-    def is_operator(char):
-        if "*|.+()".find(char) != -1:
-            return True
-        return False
-
-    @staticmethod
-    def has_less_or_equal_priority(char, operator):
-        operators = {'*': 3, '+': 3, '.': 2, '|': 1, '(': 0}
-        return operators[char] <= operators[operator]
-
-    @staticmethod
-    def to_postfix(infix):
-        stack = []
-        postfix = ''
-        for c in infix:
-            if c == '(':
-                stack.append(c)
-            elif c == ')':
-                while not stack[-1] == '(':
-                    postfix = postfix + stack[-1]
-                    stack.pop()
-                stack.pop()
-            elif RegexUtils.is_operator(c):
-                while (stack != []) and (stack[-1] != '(') and (RegexUtils.has_less_or_equal_priority(c, stack[-1])):
-                    postfix = postfix + stack[-1]
-                    stack.pop()
-                stack.append(c)
-            else:
-                postfix = postfix + c
-        while stack:
-            postfix = postfix + stack[-1]
-            stack.pop()
-        return list(postfix)
-
-
-a_union_b = regex_to_nfa('abc*')
+a_union_b = regex_to_nfa('(abc)*')
 a_union_b.print()
 a_union_b.rename_all_states()
 a_union_b.print()
