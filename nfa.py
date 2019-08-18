@@ -1,10 +1,40 @@
 import copy
+
+
 class NFA:
     def __init__(self, states, transition, start_state, accept_states):
         self.states = states
         self.transition = transition
         self.start_state = start_state
         self.accept_states = accept_states
+
+    def rename_state(self, old_state, new_state):
+        if old_state in self.states:
+            self.states.remove(old_state)
+            self.states.add(new_state)
+            if self.start_state == old_state:
+                self.start_state = new_state
+            if old_state in self.accept_states:
+                self.accept_states.remove(old_state)
+                self.accept_states.add(new_state)
+            new_transition = {}
+
+            for key in self.transition:
+                li = self.transition[key]
+                if old_state in li:
+                    li.remove(old_state)
+                    li.add(new_state)
+
+                if key[0] == old_state:
+                    new_transition[(new_state, key[1])] = li
+                else:
+                    new_transition[key] = li
+            self.transition = new_transition
+
+    def rename_all_states(self):
+        states_saver = self.states.copy()
+        for i, state in enumerate(states_saver):
+            self.rename_state(state, str(i))
 
     def print(self):
         print("{")

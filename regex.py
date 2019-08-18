@@ -11,40 +11,55 @@ def regex_to_nfa(regexp):
     regexp = RegexUtils.to_postfix(new__regexp)
     print(regexp)
     stack_aux = []
-    regexp_nfa = None
     for token in regexp:
         if RegexUtils.is_operator(token):
+            aux = stack_aux.pop()
             if token == "*":
-                if regexp_nfa:
-                    regexp_nfa = regexp_nfa.kleene_closure()
+                if isinstance(aux, NFA):
+                    stack_aux.append(aux.kleene_closure())
                 else:
-                    regexp_nfa = NFA({'0', '1'}, {('0', stack_aux.pop()): {'1'}}, '0', {'1'}).kleene_closure()
+                    stack_aux.append(NFA({'0', '1'}, {('0', aux): {'1'}}, '0', {'1'}).kleene_closure())
             elif token == "|":
-                if regexp_nfa:
-                    regexp_nfa = regexp_nfa.union(NFA({'0', '1'}, {('0', stack_aux.pop()): {'1'}}, '0', {'1'}))
+                aux2 = stack_aux.pop()
+                if isinstance(aux, NFA) == isinstance(aux2, NFA):
+                    if isinstance(aux, NFA):
+                        stack_aux.append(aux.union(aux2))
+                    else:
+                        aux_nfa = NFA({'0', '1'}, {('0', aux): {'1'}}, '0', {'1'})
+                        stack_aux.append(NFA({'0', '1'}, {('0', aux2): {'1'}}, '0', {'1'}).union(aux_nfa))
                 else:
-                    aux_nfa = NFA({'0', '1'}, {('0', stack_aux.pop()): {'1'}}, '0', {'1'})
-                    regexp_nfa = NFA({'0', '1'}, {('0', stack_aux.pop()): {'1'}}, '0', {'1'}).union(aux_nfa)
+                    if isinstance(aux2, NFA):
+                        aux3 = aux
+                        aux = aux2
+                        aux2 = aux3
+                    stack_aux.append(aux.union(NFA({'0', '1'}, {('0', aux2): {'1'}}, '0', {'1'})))
             elif token == ".":
-                if regexp_nfa:
-                    regexp_nfa = NFA({'0', '1'}, {('0', stack_aux.pop()): {'1'}}, '0', {'1'}).concat(regexp_nfa)
+                aux2 = stack_aux.pop()
+                if isinstance(aux, NFA) == isinstance(aux2, NFA):
+                    if isinstance(aux, NFA):
+                        stack_aux.append(aux2.concat(aux))
+                    else:
+                        aux_nfa = NFA({'0', '1'}, {('0', aux): {'1'}}, '0', {'1'})
+                        stack_aux.append(NFA({'0', '1'}, {('0', aux2): {'1'}}, '0', {'1'}).concat(aux_nfa))
                 else:
-                    aux_nfa = NFA({'0', '1'}, {('0', stack_aux.pop()): {'1'}}, '0', {'1'})
-                    regexp_nfa = aux_nfa.concat(NFA({'0', '1'}, {('0', stack_aux.pop()): {'1'}}, '0', {'1'}))
+                    if isinstance(aux, NFA):
+                        stack_aux.append(NFA({'0', '1'}, {('0', aux2): {'1'}}, '0', {'1'}).concat(aux))
+                    else:
+                        stack_aux.append(aux2.concat(NFA({'0', '1'}, {('0', aux): {'1'}}, '0', {'1'})))
             else:
-                if regexp_nfa:
-                    regexp_nfa = regexp_nfa.plus_closure()
+                if isinstance(aux, NFA):
+                    stack_aux.append(aux.plus_closure())
                 else:
-                    regexp_nfa = NFA({'0', '1'}, {('0', stack_aux.pop()): {'1'}}, '0', {'1'}).plus_closure()
+                    stack_aux.append(NFA({'0', '1'}, {('0', aux): {'1'}}, '0', {'1'}).plus_closure())
         else:
             stack_aux.append(token)
-    return regexp_nfa
+    return stack_aux.pop()
 
 
 class RegexUtils:
     @staticmethod
     def is_operator(char):
-        if "*|.+()".find(char) != -1 :
+        if "*|.+()".find(char) != -1:
             return True
         return False
 
@@ -78,6 +93,8 @@ class RegexUtils:
         return list(postfix)
 
 
-a_union_b = regex_to_nfa('ab*')
+a_union_b = regex_to_nfa('abc*')
+a_union_b.print()
+a_union_b.rename_all_states()
 a_union_b.print()
 print('--------------')
