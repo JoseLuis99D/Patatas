@@ -2,7 +2,13 @@ from nfa import NFA
 
 
 def regex_to_nfa(regexp):
-    regexp = RegexUtils.to_postfix(regexp)
+    new__regexp = ""
+    for index, char in enumerate(regexp):
+        new__regexp += char
+        if not RegexUtils.is_operator(char) and not RegexUtils.is_operator(regexp[index+1]):
+            new__regexp += '.'
+
+    regexp = RegexUtils.to_postfix(new__regexp)
     print(regexp)
     stack_aux = []
     regexp_nfa = None
@@ -21,10 +27,10 @@ def regex_to_nfa(regexp):
                     regexp_nfa = NFA({'0', '1'}, {('0', stack_aux.pop()): {'1'}}, '0', {'1'}).union(aux_nfa)
             elif token == ".":
                 if regexp_nfa:
-                    regexp_nfa = regexp_nfa.concat(NFA({'0', '1'}, {('0', stack_aux.pop()): {'1'}}, '0', {'1'}))
+                    regexp_nfa = NFA({'0', '1'}, {('0', stack_aux.pop()): {'1'}}, '0', {'1'}).concat(regexp_nfa)
                 else:
                     aux_nfa = NFA({'0', '1'}, {('0', stack_aux.pop()): {'1'}}, '0', {'1'})
-                    regexp_nfa = NFA({'0', '1'}, {('0', stack_aux.pop()): {'1'}}, '0', {'1'}).concat(aux_nfa)
+                    regexp_nfa = aux_nfa.concat(NFA({'0', '1'}, {('0', stack_aux.pop()): {'1'}}, '0', {'1'}))
             else:
                 if regexp_nfa:
                     regexp_nfa = regexp_nfa.plus_closure()
@@ -38,7 +44,7 @@ def regex_to_nfa(regexp):
 class RegexUtils:
     @staticmethod
     def is_operator(char):
-        if char == '*' or char == '|' or char == '.' or char == '+':
+        if "*|.+()".find(char) != -1 :
             return True
         return False
 
@@ -72,6 +78,6 @@ class RegexUtils:
         return list(postfix)
 
 
-a_union_b = regex_to_nfa('a|b*')
+a_union_b = regex_to_nfa('ab*')
 a_union_b.print()
 print('--------------')

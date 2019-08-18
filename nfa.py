@@ -1,3 +1,4 @@
+import copy
 class NFA:
     def __init__(self, states, transition, start_state, accept_states):
         self.states = states
@@ -84,24 +85,24 @@ class NFA:
         return NFA(new_states, new_transition, new_start_state, new_accept_states)
 
     def kleene_closure(self):
-        new_states = self.states
+        new_states = self.states.copy()
         new_states.add('q_i' + self.start_state)
         new_states.add('q_f' + self.start_state)
         new_start_state = 'q_i' + self.start_state
         new_accept_states = {'q_f' + self.start_state}
-        new_transition = self.transition
+        new_transition = copy.deepcopy(self.transition)
         new_transition[('q_i' + self.start_state, 'epsilon')] = {self.start_state, 'q_f' + self.start_state}
         for state in self.accept_states:
             new_transition[(state, 'epsilon')] = {'q_f' + self.start_state, self.start_state}
         return NFA(new_states, new_transition, new_start_state, new_accept_states)
 
     def plus_closure(self):
-        new_states = self.states
+        new_states = self.states.copy()
         new_states.add('q_i' + self.start_state)
         new_states.add('q_f' + self.start_state)
         new_start_state = 'q_i' + self.start_state
         new_accept_states = {'q_f' + self.start_state}
-        new_transition = self.transition
+        new_transition = copy.deepcopy(self.transition)
         new_transition[('q_i' + self.start_state, 'epsilon')] = {self.start_state}
         for state in self.accept_states:
             new_transition[(state, 'epsilon')] = {'q_f' + self.start_state, self.start_state}
