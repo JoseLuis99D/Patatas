@@ -4,45 +4,52 @@ class NFA:
         self.transition = transition
         self.start_state = start_state
         self.accept_states = accept_states
+
     def print(self):
-        print(self.states)
-        print(self.start_state)
-        print(self.accept_states)
-        print(self.transition)
+        print("{")
+        print("\t" + str(self.states))
+        print("\t" + str(self.start_state))
+        print("\t" + str(self.accept_states))
+        print("\t" + str(self.transition))
+        print("}\n")
+
     def accept(self, string):
-        result_set = self.compute(string, self.eclousure(self.start_state))
+        result_set = self.compute(string, self.e_closure(self.start_state))
         for result in result_set:
-            for eresult in self.eclousure(result):
+            for eresult in self.e_closure(result):
                 if eresult in self.accept_states:
                     return True
         return False
+
     def next_states(self, state, char='epsilon'):
         input = (state, char)
         if input in self.transition:
             return self.transition[input]
         else:
             return []
+
     def compute(self, string, states):
         result = set()
         if len(string) == 0:
             return states
         else:
             for state in states:
-                for s in self.eclousure(state):
+                for s in self.e_closure(state):
                     result = result.union(self.next_states(s, string[0]))
         return self.compute(string[1:], result)
-    def eclousure(self, state):
-        set_clousure = []
+
+    def e_closure(self, state):
+        set_closure = []
         stack = [state]
-        while stack!=[]:
+        while stack:
             s = stack.pop()
-            if s not in set_clousure:
-                set_clousure.append(s)
+            if s not in set_closure:
+                set_closure.append(s)
             for new_state in self.next_states(s):
-                if new_state not in set_clousure:
-                    set_clousure.append(new_state)
+                if new_state not in set_closure:
+                    set_closure.append(new_state)
                     stack.append(new_state)
-        return set_clousure
+        return set_closure
 
     def concat(self, nfa):
         new_states = {'p' + s for s in self.states}.union({'q' + s for s in nfa.states})
@@ -72,10 +79,11 @@ class NFA:
             new_transition[('p' + state, 'epsilon')] = {'f' + self.start_state + nfa.start_state}
         for state in nfa.accept_states:
             new_transition[('q' + state, 'epsilon')] = {'f' + self.start_state + nfa.start_state}
-        new_transition[('s' + self.start_state + nfa.start_state, 'epsilon')] = {'p' + self.start_state, 'q' + nfa.start_state}
+        new_transition[('s' + self.start_state + nfa.start_state, 'epsilon')] = {'p' + self.start_state,
+                                                                                 'q' + nfa.start_state}
         return NFA(new_states, new_transition, new_start_state, new_accept_states)
 
-    def kleene_clousure(self):
+    def kleene_closure(self):
         new_states = self.states
         new_states.add('q_i' + self.start_state)
         new_states.add('q_f' + self.start_state)
@@ -87,7 +95,7 @@ class NFA:
             new_transition[(state, 'epsilon')] = {'q_f' + self.start_state, self.start_state}
         return NFA(new_states, new_transition, new_start_state, new_accept_states)
 
-    def plus_clousure(self):
+    def plus_closure(self):
         new_states = self.states
         new_states.add('q_i' + self.start_state)
         new_states.add('q_f' + self.start_state)
@@ -117,7 +125,7 @@ trans6 = {('0', 'b'): {'1'}}
 nfa6 = NFA({'0', '1'}, trans6, '0', {'1'})
 
 nfa7 = nfa4.concat(nfa6)
-nfa7 = nfa7.kleene_clousure()
+nfa7 = nfa7.kleene_closure()
 
 print(nfa7.accept('ab'))
 print(nfa7.accept('ba'))
