@@ -53,9 +53,9 @@ class NFA:
         return False
 
     def next_states(self, state, char='epsilon'):
-        input = (state, char)
-        if input in self.transition:
-            return self.transition[input]
+        input_tuple = (state, char)
+        if input_tuple in self.transition:
+            return self.transition[input_tuple]
         else:
             return []
 
